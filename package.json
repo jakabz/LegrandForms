@@ -1,0 +1,59 @@
+{
+  "name": "nintex-form-customizer",
+  "version": "0.0.1",
+  "private": true,
+  "engines": {
+    "node": ">=22.14.0 < 23.0.0"
+  },
+  "scripts": {
+    "build": "heft test --clean --production && heft package-solution --production",
+    "clean": "heft clean",
+    "eject-webpack": "heft eject-webpack",
+    "start": "heft start --clean",
+    "test": "heft test --clean",
+    "test:watch": "heft test --watch",
+    "analyze": "tsx scripts/analyze-nintex.ts",
+    "package": "heft test --clean --production && heft package-solution --production"
+  },
+  "dependencies": {
+    "@fluentui/react": "^8.106.4",
+    "@microsoft/decorators": "1.23.2",
+    "@microsoft/sp-core-library": "1.23.2",
+    "@microsoft/sp-listview-extensibility": "1.23.2",
+    "@microsoft/sp-lodash-subset": "1.23.2",
+    "@microsoft/sp-office-ui-fabric-core": "1.23.2",
+    "@pnp/sp": "^4.21.0",
+    "@pnp/spfx-controls-react": "3.25.0",
+    "dompurify": "^3.4.16",
+    "fast-xml-parser": "^5.11.2",
+    "react": "17.0.1",
+    "react-dom": "17.0.1",
+    "tslib": "2.3.1"
+  },
+  "devDependencies": {
+    "@microsoft/eslint-config-spfx": "1.23.2",
+    "@microsoft/eslint-plugin-spfx": "1.23.2",
+    "@microsoft/sp-module-interfaces": "1.23.2",
+    "@microsoft/spfx-heft-plugins": "1.23.2",
+    "@microsoft/spfx-web-build-rig": "1.23.2",
+    "@rushstack/heft": "1.2.17",
+    "@testing-library/react": "^12.1.5",
+    "@types/jest": "30.0.0",
+    "@types/node": "^22.20.5",
+    "@types/react": "17.0.45",
+    "@types/react-dom": "17.0.17",
+    "@types/webpack-env": "~1.15.2",
+    "css-loader": "~7.1.2",
+    "eslint": "9.37.0",
+    "eslint-plugin-react-hooks": "5.2.0",
+    "tsx": "^4.23.15",
+    "typescript": "~5.8.0"
+  },
+  "overrides": {
+    "@rushstack/heft": "1.2.17"
+  },
+  "resolutions": {
+    "@types/react": "17.0.45"
+  },
+  "description": "Generic SPFx Form Customizer that renders SharePoint list forms from Nintex Forms (classic) XML exports"
+}

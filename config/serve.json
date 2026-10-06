@@ -1,0 +1,57 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/spfx-serve.schema.json",
+  "port": 4321,
+  "https": true,
+  "serveConfigurations": {
+    "default": {
+      "pageUrl": "https://{tenantDomain}/sites/{site}/_layouts/15/SPListForm.aspx",
+      "formCustomizer": {
+        "componentId": "3dfda748-218b-4cd1-8967-537b5d9c49ef",
+        "PageType": 8,
+        "RootFolder": "/sites/{site}/Lists/AuditJelentesek",
+        "properties": {
+          "formDefinitionUrl": "/sites/{site}/FormDefinitions/AJForm.xml",
+          "debug": true
+        }
+      }
+    },
+    "nintexForm_NewForm": {
+      "pageUrl": "https://{tenantDomain}/sites/{site}/_layouts/15/SPListForm.aspx",
+      "formCustomizer": {
+        "componentId": "3dfda748-218b-4cd1-8967-537b5d9c49ef",
+        "PageType": 8,
+        "RootFolder": "/sites/{site}/Lists/AuditJelentesek",
+        "properties": {
+          "formDefinitionUrl": "/sites/{site}/FormDefinitions/AJForm.xml",
+          "debug": true
+        }
+      }
+    },
+    "nintexForm_EditForm": {
+      "pageUrl": "https://{tenantDomain}/sites/{site}/_layouts/15/SPListForm.aspx",
+      "formCustomizer": {
+        "componentId": "3dfda748-218b-4cd1-8967-537b5d9c49ef",
+        "PageType": 6,
+        "RootFolder": "/sites/{site}/Lists/AuditJelentesek",
+        "ID": 1,
+        "properties": {
+          "formDefinitionUrl": "/sites/{site}/FormDefinitions/AJForm.xml",
+          "debug": true
+        }
+      }
+    },
+    "nintexForm_ViewForm": {
+      "pageUrl": "https://{tenantDomain}/sites/{site}/_layouts/15/SPListForm.aspx",
+      "formCustomizer": {
+        "componentId": "3dfda748-218b-4cd1-8967-537b5d9c49ef",
+        "PageType": 4,
+        "RootFolder": "/sites/{site}/Lists/AuditJelentesek",
+        "ID": 1,
+        "properties": {
+          "formDefinitionUrl": "/sites/{site}/FormDefinitions/AJForm.xml",
+          "debug": true
+        }
+      }
+    }
+  }
+}

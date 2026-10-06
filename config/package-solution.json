@@ -1,0 +1,40 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
+  "solution": {
+    "name": "nintex-form-customizer-client-side-solution",
+    "id": "8f73392b-1645-4b27-86f6-aa7cbd9019c5",
+    "version": "1.0.0.0",
+    "includeClientSideAssets": true,
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "developer": {
+      "name": "",
+      "websiteUrl": "",
+      "privacyUrl": "",
+      "termsOfUseUrl": "",
+      "mpnId": "Undefined-1.23.2"
+    },
+    "metadata": {
+      "shortDescription": {
+        "default": "Generic form customizer that renders SharePoint list forms from Nintex Forms (classic) XML exports."
+      },
+      "longDescription": {
+        "default": "Generic form customizer that renders SharePoint list forms from Nintex Forms (classic) XML exports."
+      },
+      "screenshotPaths": [],
+      "videoUrl": "",
+      "categories": []
+    },
+    "features": [
+      {
+        "title": "Nintex XML form customizer",
+        "description": "The feature that activates elements of the nintex-form-customizer solution.",
+        "id": "4a9442e2-03e5-48aa-9d81-19ef022495c0",
+        "version": "1.0.0.0"
+      }
+    ]
+  },
+  "paths": {
+    "zippedPackage": "solution/nintex-form-customizer.sppkg"
+  }
+}

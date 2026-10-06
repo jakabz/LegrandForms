@@ -1,0 +1,3 @@
+# Nintex exports are UTF-16LE; never normalize line endings or re-encode them.
+samples/**/*.xml -text diff
+*.sppkg binary

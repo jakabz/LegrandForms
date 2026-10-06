@@ -1,0 +1,14 @@
+{
+  "extends": "./node_modules/@microsoft/spfx-web-build-rig/profiles/default/tsconfig-base.json",
+  "compilerOptions": {
+    // SharePoint Online only runs in evergreen browsers; the ES2018 library typings are safe to use.
+    // The emit target stays ES5 (rig default); iteration over Map/Set needs downlevelIteration.
+    "lib": ["dom", "dom.iterable", "es2018"],
+    "downlevelIteration": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    // "node" is needed by the Jest tests that read samples/*.xml from disk.
+    // ESLint forbids Node built-ins outside __tests__ (see eslint.config.js).
+    "types": ["jest", "webpack-env", "node"]
+  }
+}
