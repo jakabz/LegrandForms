@@ -1,0 +1,43 @@
+{
+  "_comment": "Form customizer assignments per environment. List and content type names are placeholders until K-02/K-06 are confirmed.",
+  "componentId": "3dfda748-218b-4cd1-8967-537b5d9c49ef",
+  "defaults": {
+    "definitionLibrary": "FormDefinitions",
+    "layoutName": "Desktop",
+    "responsiveBreakpoint": 640,
+    "collapseHiddenRows": true,
+    "emptyRuleBehavior": "warn",
+    "debug": false
+  },
+  "environments": {
+    "DEV": {
+      "siteUrl": "https://<tenant>.sharepoint.com/sites/<dev-site>",
+      "debug": true,
+      "urlRewrites": {
+        "http://appfrlgs243.eu.dir.grpleg.com/sites/": "https://<tenant>.sharepoint.com/sites/",
+        "http://solutions.grpleg.com/sites/": "https://<tenant>.sharepoint.com/sites/"
+      }
+    },
+    "TEST": {
+      "siteUrl": "https://<tenant>.sharepoint.com/sites/<test-site>",
+      "urlRewrites": {
+        "http://appfrlgs243.eu.dir.grpleg.com/sites/": "https://<tenant>.sharepoint.com/sites/",
+        "http://solutions.grpleg.com/sites/": "https://<tenant>.sharepoint.com/sites/"
+      }
+    },
+    "PROD": {
+      "siteUrl": "https://<tenant>.sharepoint.com/sites/<prod-site>",
+      "urlRewrites": {
+        "http://appfrlgs243.eu.dir.grpleg.com/sites/": "https://<tenant>.sharepoint.com/sites/",
+        "http://solutions.grpleg.com/sites/": "https://<tenant>.sharepoint.com/sites/"
+      }
+    }
+  },
+  "forms": [
+    { "list": "<Audit jelentések lista>", "contentType": "<tartalomtípus>", "definition": "AJForm.xml" },
+    { "list": "<Audit tervek lista>", "contentType": "<tartalomtípus>", "definition": "ATForm.xml" },
+    { "list": "<Dokumentumok lista>", "contentType": "<tartalomtípus>", "definition": "Form.xml" },
+    { "list": "<Munkautasítások lista>", "contentType": "<tartalomtípus>", "definition": "MUForm.xml" },
+    { "list": "<Nyomtatványok lista>", "contentType": "<tartalomtípus>", "definition": "NyForm.xml" }
+  ]
+}
