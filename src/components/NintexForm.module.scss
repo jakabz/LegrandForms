@@ -1,0 +1,152 @@
+// Base styles of the Nintex runtime classes (Rendszerterv §11.1). The exported form CSS (scoped to
+// .nf-root-<formId>) is applied on top and overrides these defaults (e.g. the 10px inner padding).
+.root {
+  position: relative;
+  box-sizing: border-box;
+  max-width: 100%;
+  padding: 8px 0 24px;
+  font-family: "Segoe UI", "Segoe UI Web (West European)", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+  font-size: 13px;
+  color: "[theme:bodyText, default:#323130]";
+
+  :global {
+    .nf-canvas-container {
+      position: relative;
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    .nf-form-canvas {
+      box-sizing: border-box;
+    }
+
+    .nf-filler-control {
+      box-sizing: border-box;
+    }
+
+    .nf-filler-control-border {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      box-sizing: border-box;
+    }
+
+    .nf-filler-control-inner {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+    }
+
+    .nf-control-content p {
+      margin: 0;
+    }
+
+    .nf-form-label .nf-control-content {
+      line-height: 1.4;
+      overflow-wrap: anywhere;
+    }
+
+    .nf-display-value {
+      min-height: 20px;
+      padding: 4px 0;
+      overflow-wrap: anywhere;
+    }
+
+    .nf-calculation-value {
+      padding: 4px 0;
+    }
+
+    .nf-validation-error {
+      color: "[theme:errorText, default:#a4262c]";
+      font-size: 12px;
+      padding-top: 2px;
+    }
+
+    .nf-attachments-list {
+      list-style: none;
+      margin: 0 0 4px;
+      padding: 0;
+
+      li {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+    }
+
+    .nf-attachments-pending {
+      color: "[theme:neutralSecondary, default:#605e5c]";
+      font-style: italic;
+    }
+
+    .nf-debug-id {
+      position: absolute;
+      top: 0;
+      right: 0;
+      z-index: 10000;
+      padding: 0 3px;
+      font: 10px monospace;
+      background: rgba(255, 255, 0, 0.85);
+      color: #000;
+      pointer-events: none;
+    }
+
+    // Responsive (narrow) mode: one column, label/input pairs stacked.
+    .nf-responsive {
+      padding: 0 8px;
+
+      .nf-responsive-row {
+        padding: 2px 0;
+      }
+
+      .nf-filler-control {
+        position: relative;
+        width: 100%;
+        height: auto;
+      }
+
+      .nf-filler-control-border,
+      .nf-filler-control-inner {
+        position: static;
+      }
+
+      .nf-filler-control-inner {
+        padding: 4px 0;
+      }
+
+      .nf-form-label {
+        text-align: left;
+        border-top: 0;
+      }
+    }
+  }
+}
+
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  max-width: 700px;
+  margin: 0 auto 8px;
+}
+
+.messages {
+  max-width: 700px;
+  margin: 0 auto 8px;
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  max-width: 700px;
+  margin: 16px auto 0;
+}
+
+.loading {
+  padding: 48px 0;
+}
