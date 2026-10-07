@@ -21,7 +21,7 @@ import styles from './NintexForm.module.scss';
 export type NintexFormState =
   | { kind: 'loading' }
   | { kind: 'error'; message: string; diagnostics?: Diagnostic[] }
-  | { kind: 'ready'; store: FormStore; config: ResolvedConfig };
+  | { kind: 'ready'; store: FormStore; config: ResolvedConfig; customCss?: string };
 
 export interface INintexFormProps {
   state: NintexFormState;
@@ -57,11 +57,12 @@ function buildLabelIndex(store: FormStore): Record<string, string[]> {
 const ReadyForm: React.FC<{
   store: FormStore;
   config: ResolvedConfig;
+  customCss?: string;
   strings: INintexFormFormCustomizerStrings;
   services: FormServices;
   onSaved(): void;
   onClosed(): void;
-}> = ({ store, config, strings, services, onSaved, onClosed }) => {
+}> = ({ store, config, customCss, strings, services, onSaved, onClosed }) => {
   useAnyStoreChange(store);
   const [showIds, setShowIds] = React.useState(false);
   const [panelOpen, setPanelOpen] = React.useState(false);
@@ -70,6 +71,10 @@ const ReadyForm: React.FC<{
   const [attachmentWarning, setAttachmentWarning] = React.useState<string | undefined>(undefined);
   const labelsByControl = React.useMemo(() => buildLabelIndex(store), [store]);
   const layout = pickLayout(store.definition.layouts, config.layoutName);
+  const isRemoved = React.useMemo(() => {
+    const controls = store.definition.controls;
+    return (controlId: string): boolean => config.hideImages && !!controls[controlId] && controls[controlId].type === 'Image';
+  }, [store, config.hideImages]);
 
   const run = React.useCallback(
     async (button: ButtonControl) => {
@@ -113,8 +118,18 @@ const ReadyForm: React.FC<{
   );
 
   const context: FormContextValue = React.useMemo(
-    () => ({ store, strings, services, labelsByControl, debug: config.debug, showControlIds: showIds, onCommand }),
-    [store, strings, services, labelsByControl, config.debug, showIds, onCommand]
+    () => ({
+      store,
+      strings,
+      services,
+      labelsByControl,
+      debug: config.debug,
+      styleMode: config.styleMode,
+      isRemoved,
+      showControlIds: showIds,
+      onCommand
+    }),
+    [store, strings, services, labelsByControl, config.debug, config.styleMode, isRemoved, showIds, onCommand]
   );
 
   const hasButtons = Object.keys(store.definition.controls).some((id) => store.definition.controls[id].type === 'Button');
@@ -122,7 +137,10 @@ const ReadyForm: React.FC<{
 
   return (
     <FormContext.Provider value={context}>
-      <div className={`${styles.root} ${scopeClassName(store.definition.id)}`} lang={store.locale}>
+      <div
+        className={`${styles.root} ${config.styleMode === 'fluent' ? styles.fluent : ''} nf-style-${config.styleMode} ${scopeClassName(store.definition.id)}`}
+        lang={store.locale}
+      >
         {config.debug && (
           <div className={styles.toolbar}>
             <DefaultButton iconProps={{ iconName: 'Bug' }} text={strings.DiagnosticsButton} onClick={() => setPanelOpen(true)} />
@@ -154,7 +172,13 @@ const ReadyForm: React.FC<{
         </div>
 
         {layout && (
-          <FormCanvas layout={layout} collapseHiddenRows={config.collapseHiddenRows} responsiveBreakpoint={config.responsiveBreakpoint} />
+          <FormCanvas
+            layout={layout}
+            collapseHiddenRows={config.collapseHiddenRows}
+            responsiveBreakpoint={config.responsiveBreakpoint}
+            hideBackgroundImage={config.hideImages}
+            customCss={customCss}
+          />
         )}
 
         {!hasButtons && (
@@ -233,7 +257,7 @@ export const NintexForm: React.FC<INintexFormProps> = (props) => {
   }
   return (
     <ErrorBoundary title={strings.LoadErrorTitle} backText={strings.BackToList} backUrl={listUrl}>
-      <ReadyForm {...props} store={state.store} config={state.config} />
+      <ReadyForm {...props} store={state.store} config={state.config} customCss={state.customCss} />
     </ErrorBoundary>
   );
 };

@@ -33,13 +33,13 @@ function measurable(def: ControlDefinition): boolean {
 export const ControlHost: React.FC<ControlHostProps> = React.memo((props: ControlHostProps) => {
   const { controlId, box, layoutWidth, percent, height, onMeasure } = props;
   const ctx = useFormContext();
-  const { store, strings, labelsByControl, showControlIds } = ctx;
+  const { store, strings, labelsByControl, showControlIds, styleMode, isRemoved } = ctx;
   const def = store.definition.controls[controlId];
   const { value, state, errors } = useControlState(store, controlId);
   const innerRef = React.useRef<HTMLDivElement>(null);
   const contentRef = React.useRef<HTMLDivElement>(null);
   const lastReported = React.useRef<number | undefined>(undefined);
-  const visible = !!def && !state.hidden && !(def.type === 'Button' && !store.isButtonVisible(def));
+  const visible = !!def && !isRemoved(controlId) && !state.hidden && !(def.type === 'Button' && !store.isButtonVisible(def));
 
   // Report growth of the content (multi-line text, people, validation messages) so rows below move down.
   React.useEffect(() => {
@@ -72,7 +72,8 @@ export const ControlHost: React.FC<ControlHostProps> = React.memo((props: Contro
 
   if (!def || !visible) return null;
 
-  const style = mergeStyles(def.style, state.style);
+  // Fluent mode keeps only the rule formats (they carry meaning, e.g. a red highlight), not the static XML look.
+  const style = styleMode === 'fluent' ? state.style : mergeStyles(def.style, state.style);
   const classes = ['nf-filler-control', `nf-ctl-${def.type.toLowerCase()}`];
   if (def.cssClass) classes.push(def.cssClass);
   classes.push(...state.cssClasses);

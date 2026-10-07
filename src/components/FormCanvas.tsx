@@ -11,6 +11,10 @@ export interface FormCanvasProps {
   layout: LayoutDefinition;
   collapseHiddenRows: boolean;
   responsiveBreakpoint: number;
+  /** Leave out the layout background image (`hideImages`). */
+  hideBackgroundImage?: boolean;
+  /** Cleaned (unscoped) custom CSS of the content type; applied after the form CSS. */
+  customCss?: string;
 }
 
 function useContainerWidth(ref: React.RefObject<HTMLDivElement>): number {
@@ -33,10 +37,12 @@ function useContainerWidth(ref: React.RefObject<HTMLDivElement>): number {
 
 /**
  * Lays out the controls like the Nintex canvas (absolute px, z-index) or, below the breakpoint, as a single
- * responsive column (Rendszerterv §10). The form CSS is cleaned at parse time and scoped here (§11.1).
+ * responsive column (Rendszerterv §10). The form CSS is cleaned at parse time and scoped here (§11.1); style mode,
+ * custom CSS and removed images follow the configuration (§11.4).
  */
-export const FormCanvas: React.FC<FormCanvasProps> = ({ layout, collapseHiddenRows, responsiveBreakpoint }) => {
-  const { store, services } = useFormContext();
+export const FormCanvas: React.FC<FormCanvasProps> = ({ layout, collapseHiddenRows, responsiveBreakpoint, hideBackgroundImage, customCss }) => {
+  const { store, services, styleMode, isRemoved } = useFormContext();
+  const fluent = styleMode === 'fluent';
   const version = useAnyStoreChange(store);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const width = useContainerWidth(containerRef);
@@ -52,23 +58,28 @@ export const FormCanvas: React.FC<FormCanvasProps> = ({ layout, collapseHiddenRo
     });
   }, []);
 
-  const scopedCss = React.useMemo(() => scopeCss(store.definition.css, scopeClassName(store.definition.id)), [store]);
+  // Fluent mode drops the form CSS of the export; the custom CSS always comes last so it wins at equal specificity.
+  const scopedCss = React.useMemo(() => {
+    const scope = scopeClassName(store.definition.id);
+    return [fluent ? '' : scopeCss(store.definition.css, scope), scopeCss(customCss || '', scope)].filter((css) => !!css).join('\n');
+  }, [store, fluent, customCss]);
 
   const isHidden = React.useCallback(
     (controlId: string): boolean => {
       const def = store.definition.controls[controlId];
-      if (!def) return true;
+      if (!def || isRemoved(controlId)) return true;
       if (def.type === 'Button' && !store.isButtonVisible(def)) return true;
       return store.getState(controlId).hidden;
     },
     // `version` changes whenever rule states change
-    [store, version]
+    [store, isRemoved, version]
   );
 
   const responsive = width > 0 && width < responsiveBreakpoint;
+  const backgroundImage = hideBackgroundImage ? undefined : layout.backgroundImageUrl;
   const backgroundStyle: React.CSSProperties = {
-    backgroundColor: layout.backgroundColor,
-    backgroundImage: layout.backgroundImageUrl ? `url("${services.rewriteUrl(layout.backgroundImageUrl).replace(/"/g, '%22')}")` : undefined,
+    backgroundColor: fluent ? undefined : layout.backgroundColor,
+    backgroundImage: backgroundImage ? `url("${services.rewriteUrl(backgroundImage).replace(/"/g, '%22')}")` : undefined,
     backgroundRepeat: layout.backgroundImageRepeat ? layout.backgroundImageRepeat.toLowerCase().replace('norepeat', 'no-repeat') : undefined
   };
 
@@ -87,7 +98,7 @@ export const FormCanvas: React.FC<FormCanvasProps> = ({ layout, collapseHiddenRo
       </div>
     );
   } else {
-    const result = computeAbsoluteLayout({ layout, isHidden, measuredHeights: measured, collapseHiddenRows });
+    const result = computeAbsoluteLayout({ layout, isHidden, isRemoved, measuredHeights: measured, collapseHiddenRows });
     const percent = width > 0 && width < layout.width;
     content = (
       <div

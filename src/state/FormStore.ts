@@ -171,6 +171,11 @@ export class FormStore {
     return this.definition.diagnostics.concat(this._runtimeDiagnostics.toArray());
   }
 
+  /** Records a problem found outside the definition (e.g. the custom CSS file could not be loaded). */
+  public addDiagnostic(diagnostic: Diagnostic): void {
+    this._runtimeDiagnostics.add(diagnostic);
+  }
+
   public get ruleTrace(): ReadonlyArray<RuleTraceEntry> {
     return this.engine.trace;
   }

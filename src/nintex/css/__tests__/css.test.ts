@@ -1,4 +1,4 @@
-import { cleanCss } from '../cssCleaner';
+import { cleanCss, cleanCustomCss } from '../cssCleaner';
 import { parseCss, splitSelectorList, stringifyCss } from '../cssParser';
 import { scopeClassName, scopeCss, scopeSelector } from '../cssScoper';
 
@@ -79,6 +79,16 @@ describe('cleanCss', () => {
   it('drops rules that become empty', () => {
     expect(cleanCss('.a { *zoom: 1 } #uiDesignerSurface .b { color: red }')).toBe('');
     expect(cleanCss(undefined)).toBe('');
+  });
+});
+
+describe('cleanCustomCss', () => {
+  it('applies the same safety rules but keeps entities literally', () => {
+    const cleaned = cleanCustomCss(
+      '\ufeff@import url(x.css); [data-control-name="Title"] .nf-control-content { color: #c00 !important; width: expression(1) } .q::before { content: "&amp;" }'
+    );
+    expect(cleaned).toBe('[data-control-name="Title"] .nf-control-content {\n  color: #c00 !important;\n}\n.q::before {\n  content: "&amp;";\n}');
+    expect(cleanCustomCss('  ')).toBe('');
   });
 });
 

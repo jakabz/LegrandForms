@@ -71,7 +71,8 @@ function textFields(): Record<string, FieldSchema> {
 
 function setup(
   options: Partial<FormStoreOptions> = {},
-  configOverrides: Record<string, unknown> = {}
+  configOverrides: Record<string, unknown> = {},
+  customCss?: string
 ): ReturnType<typeof render> & { store: FormStore; persistence: FakePersistence; onSaved: jest.Mock; onClosed: jest.Mock } {
   const persistence = new FakePersistence();
   const store = new FormStore({
@@ -88,7 +89,7 @@ function setup(
   const onSaved = jest.fn();
   const onClosed = jest.fn();
   const utils = render(
-    <NintexForm state={{ kind: 'ready', store, config }} strings={strings} services={services} onSaved={onSaved} onClosed={onClosed} listUrl="/sites/x/Lists/A" />
+    <NintexForm state={{ kind: 'ready', store, config, customCss }} strings={strings} services={services} onSaved={onSaved} onClosed={onClosed} listUrl="/sites/x/Lists/A" />
   );
   return { store, persistence, onSaved, onClosed, ...utils };
 }
@@ -106,14 +107,50 @@ describe('NintexForm', () => {
     expect(screen.getByText(strings.BackToList).getAttribute('href')).toBe('/l');
   });
 
-  it('renders controls absolutely positioned inside the scoped root', () => {
-    const { container, store } = setup();
+  it('renders controls absolutely positioned inside the scoped root (nintex style mode)', () => {
+    const { container, store } = setup({}, { styleMode: 'nintex' });
     const root = container.querySelector(`.nf-root-${store.definition.id}`);
     expect(root).toBeTruthy();
     const title = container.querySelector(`[data-control-id="${store.definition.controlsByName.title}"]`) as HTMLElement;
     expect(title.style.position).toBe('absolute');
     expect(title.className).toContain('nf-form-input');
     expect(container.querySelector('style')!.textContent).toContain(`.nf-root-${store.definition.id} .nf-form-label`);
+  });
+
+  it('nintex style mode applies the XML look and keeps images', () => {
+    const { container, store } = setup({}, { styleMode: 'nintex' });
+    expect(container.querySelector('.nf-style-nintex')).toBeTruthy();
+    expect(container.querySelectorAll('img.nf-image').length).toBe(1);
+    expect((container.querySelector('.nf-form-canvas') as HTMLElement).style.backgroundColor).not.toBe('');
+    const styled = Object.keys(store.definition.controls).filter((id) => store.definition.controls[id].style.fontColor);
+    expect(styled.length).toBeGreaterThan(0);
+    const inner = container.querySelector(`[data-control-id="${styled[0]}"] .nf-filler-control-inner`) as HTMLElement | null;
+    if (inner) expect(inner.style.color).not.toBe('');
+  });
+
+  it('fluent style mode (default) drops the XML look and the header image, and moves the form up', () => {
+    const { container, store } = setup();
+    expect(container.querySelector('.nf-style-fluent')).toBeTruthy();
+    expect(container.querySelector('img.nf-image')).toBeNull();
+    expect(container.querySelector('style')).toBeNull();
+    expect((container.querySelector('.nf-form-canvas') as HTMLElement).style.backgroundColor).toBe('');
+    Array.from(container.querySelectorAll('.nf-filler-control-inner')).forEach((el) => expect((el as HTMLElement).style.color).toBe(''));
+    const tops = Array.from(container.querySelectorAll('.nf-filler-control')).map((el) => parseFloat((el as HTMLElement).style.top));
+    expect(Math.min(...tops)).toBe(0);
+    expect(store.definition.css).not.toBe('');
+  });
+
+  it('hideImages can be switched off in fluent mode', () => {
+    const { container } = setup({}, { hideImages: false });
+    expect(container.querySelectorAll('img.nf-image').length).toBe(1);
+  });
+
+  it('custom CSS is scoped and comes after the form CSS', () => {
+    const { container, store } = setup({}, { styleMode: 'nintex' }, '[data-control-name="Title"] { color: red !important; }');
+    const css = container.querySelector('style')!.textContent || '';
+    const scope = `.nf-root-${store.definition.id}`;
+    expect(css).toContain(`${scope} [data-control-name="Title"] {\n  color: red !important;\n}`);
+    expect(css.indexOf(`${scope} .nf-form-label`)).toBeLessThan(css.indexOf('[data-control-name="Title"]'));
   });
 
   it('hides controls by rules (New mode: created-by calculation hidden)', () => {

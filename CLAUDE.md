@@ -72,6 +72,7 @@ These are easy to get wrong; tests exist (or must exist) for each.
 13. `InsertReferences` are property bindings (`IsEnabled = fn-IsMemberOfGroup("Hungary Owners")`), parsed expression-first and overriding the static property. Known keys: IsEnabled, IsVisible, IsRequired, DefaultValue. Others (e.g. `DateOnly = {ItemProperty:Created}`) → `UnknownBinding` diagnostic, ignored.
 14. Layout is absolute px on a 700px canvas with `ZIndex`; overlapping controls toggled by rules are normal (AJForm). Large low-z-index background labels must not break hidden-band collapse.
 15. `<Script>`, `<ScriptUrls>`, button `ClientClick` are **never executed** – log `ScriptIgnored`.
+16. **Look is configuration, not XML** (Rendszerterv §11.4, §10.5): `styleMode: "fluent"` (default) takes only layout from the XML (no static control styles, form CSS, background color; rule formats still apply); `"nintex"` is Nintex-faithful. `hideImages` (default: fluent → true) removes Image controls and the background image and **always** reclaims their space. `customCssUrl` is cleaned + scoped like the form CSS and injected after it.
 
 ## Coding rules
 

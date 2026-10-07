@@ -126,6 +126,33 @@
   }
 }
 
+// styleMode "fluent" (Rendszerterv §11.4): the static XML look (colors, fonts, borders, form CSS) is not applied,
+// so the SharePoint theme shows through. Rich-text labels carry inline fonts in their HTML; those are reset to the
+// theme font. Colors inside label HTML are kept (they often carry meaning) and can be changed with the custom CSS.
+.fluent {
+  font-size: 14px;
+
+  :global {
+    .nf-label-control,
+    .nf-label-control * {
+      font-family: inherit !important;
+      font-size: inherit !important;
+    }
+
+    label.nf-label-control {
+      font-weight: 600;
+    }
+
+    .nf-ctl-label .nf-filler-control-inner {
+      padding-top: 6px;
+    }
+
+    .nf-display-value {
+      padding: 6px 0;
+    }
+  }
+}
+
 .toolbar {
   display: flex;
   justify-content: flex-end;

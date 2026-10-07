@@ -1,6 +1,7 @@
 import * as React from 'react';
 import type { LookupValue } from '../nintex/expression/values';
 import type { ButtonControl } from '../nintex/model/controls';
+import type { StyleMode } from '../services/ConfigResolver';
 import type { FormStore } from '../state/FormStore';
 
 /** Data the controls need from SharePoint (implemented by SpDataService; faked in tests). */
@@ -28,6 +29,10 @@ export interface FormContextValue {
   /** controlId → ids of the labels associated with it (aria-labelledby). */
   labelsByControl: Record<string, string[]>;
   debug: boolean;
+  /** "fluent": the static XML styles (colors, fonts, borders) are not applied (Rendszerterv §11.4). */
+  styleMode: StyleMode;
+  /** Controls left out by configuration (`hideImages`); they are not rendered at all. */
+  isRemoved(controlId: string): boolean;
   showControlIds: boolean;
   /** Runs a button command (validation, confirmation, save/close). */
   onCommand(button: ButtonControl): void;

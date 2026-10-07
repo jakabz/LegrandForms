@@ -5,7 +5,8 @@
 .DESCRIPTION
   For every entry in forms.json the script sets New/Edit/DisplayFormClientSideComponentId to the customizer id and
   the matching ...ClientSideComponentProperties to the JSON configuration (formDefinitionUrl, urlRewrites, ...).
-  Optionally uploads the XML definitions to the definition library first.
+  Look settings (styleMode, hideImages, customCss) come from "defaults" and can be overridden per form entry.
+  Optionally uploads the XML definitions (and the custom CSS files) to the definition library first.
   See docs/Fejlesztoi-leiras.md, chapter 8.
 
 .EXAMPLE
@@ -48,7 +49,23 @@ if ($UploadDefinitions -and -not $Remove) {
       Add-PnPFile -Path $file -Folder $library | Out-Null
       Write-Host "Uploaded $($form.definition)"
     }
+    # Custom CSS given by file name lives next to the definition; server-relative URLs are not uploaded.
+    $css = if ($form.customCss) { $form.customCss } else { $config.defaults.customCss }
+    if ($css -and -not $css.StartsWith('/')) {
+      $cssFile = Join-Path $DefinitionsPath $css
+      if (-not (Test-Path $cssFile)) { Write-Warning "Custom CSS not found: $cssFile"; continue }
+      if ($PSCmdlet.ShouldProcess($cssFile, "Upload to $library")) {
+        Add-PnPFile -Path $cssFile -Folder $library | Out-Null
+        Write-Host "Uploaded $css"
+      }
+    }
   }
+}
+
+# Per-form value if present, otherwise the default.
+function Get-Setting($form, [string]$name) {
+  if ($null -ne $form.$name) { return $form.$name }
+  return $config.defaults.$name
 }
 
 function Get-FormProperties($form) {
@@ -60,7 +77,13 @@ function Get-FormProperties($form) {
     emptyRuleBehavior    = $config.defaults.emptyRuleBehavior
     debug                = if ($null -ne $envConfig.debug) { [bool]$envConfig.debug } else { [bool]$config.defaults.debug }
     urlRewrites          = $envConfig.urlRewrites
+    styleMode            = if (Get-Setting $form 'styleMode') { Get-Setting $form 'styleMode' } else { 'fluent' }
   }
+  # Without an explicit value hideImages follows styleMode (fluent: hidden, nintex: shown).
+  $hideImages = Get-Setting $form 'hideImages'
+  if ($null -ne $hideImages) { $props.hideImages = [bool]$hideImages }
+  $css = Get-Setting $form 'customCss'
+  if ($css) { $props.customCssUrl = if ($css.StartsWith('/')) { $css } else { "$libraryUrl/$css" } }
   return ($props | ConvertTo-Json -Compress -Depth 5)
 }
 

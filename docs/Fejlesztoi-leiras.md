@@ -194,6 +194,28 @@ Az elemző a `tsx` futtatót használja (`"analyze": "tsx scripts/analyze-nintex
 ### 5.3 Diagnosztikai mód
 `properties.debug = true` vagy (csak debug buildben) `?nfDebug=1`: oldalpanel a diagnosztikákkal, szabály-nyomkövetéssel, vezérlő-ID overlay-jel.
 
+### 5.4 Megjelenés kipróbálása
+A `serve.json` `properties` részében (vagy a tartalomtípuson) a `styleMode` (`"fluent"` – alapértelmezés, vagy `"nintex"`), a `hideImages` és a `customCssUrl` állítható (Rendszerterv 11.4, 10.5). Gyors váltás URL-paraméterrel, újraindítás nélkül:
+
+| Paraméter | Hatás | Mikor működik |
+|---|---|---|
+| `?nfStyle=nintex` / `?nfStyle=fluent` | stílusmód | debug build **vagy** `debug: true` a tartalomtípuson |
+| `?nfHideImages=0` / `=1` | képek mutatása / elrejtése | debug build **vagy** `debug: true` |
+| `?nfCss=/sites/<site>/FormDefinitions/x.css` | egyedi CSS | csak debug build (`npm start`) |
+
+Példa egyedi CSS-re (`AJForm.custom.css`):
+
+```css
+/* minden szövegmező kerete */
+.nf-ctl-textbox .ms-TextField-fieldGroup { border-color: #0078d4; }
+/* egy vezérlő a Nintex-neve alapján */
+[data-control-name="Title"] .nf-control-content { font-weight: 600; }
+/* csak Nintex módban: az inline XML-stílus felülírásához !important kell */
+.nf-style-nintex .nf-ctl-label .nf-filler-control-inner { color: #333 !important; }
+```
+
+A szelektorok automatikusan az adott űrlap gyökere (`.nf-root-<formId>`) alá kerülnek; az `@import`, `expression()` és `javascript:` tiltott. Relatív `url(...)` az oldalhoz képest oldódik fel, ezért szerver-relatív URL-t használj.
+
 ---
 
 ## 6. Hogyan…?
@@ -269,6 +291,9 @@ $props = @{
   layoutName            = "Desktop"
   responsiveBreakpoint  = 640
   collapseHiddenRows    = $true
+  styleMode             = "fluent"                                   # vagy "nintex"
+  # hideImages          = $false                                     # alapból fluent → true, nintex → false
+  # customCssUrl        = "/sites/<site>/FormDefinitions/AJForm.custom.css"
   urlRewrites           = @{
     "http://appfrlgs243.eu.dir.grpleg.com/sites/" = "https://<tenant>.sharepoint.com/sites/"
     "http://solutions.grpleg.com/sites/"          = "https://<tenant>.sharepoint.com/sites/"
@@ -297,6 +322,20 @@ A hozzárendelések leírója a `deploy/forms.json` (lista, tartalomtípus, XML,
 ```
 
 A `forms.json` lista- és tartalomtípus-nevei helyőrzők, amíg a K-02/K-06 kérdések nincsenek lezárva.
+
+A megjelenés a `defaults` részben (minden űrlapra) és a `forms` tömb egyes elemeiben (csak arra az űrlapra) állítható; az űrlapszintű érték nyer:
+
+```json
+"defaults": { "…": "…", "styleMode": "fluent" },
+"forms": [
+  { "list": "Audit jelentések", "contentType": "Elem", "definition": "AJForm.xml", "customCss": "AJForm.custom.css" },
+  { "list": "Audit tervek", "contentType": "Elem", "definition": "ATForm.xml", "styleMode": "nintex", "hideImages": true }
+]
+```
+
+- `customCss`: fájlnév a definíciós tárban (a `-UploadDefinitions` a `-DefinitionsPath` mappából ezt is feltölti) vagy `/`-rel kezdődő szerver-relatív URL.
+- `hideImages` elhagyva a `styleMode`-ot követi.
+- Váltáshoz elég a szkriptet újrafuttatni; új `.sppkg` nem kell. A CSS-fájl módosítása még ennyit sem igényel (minden betöltéskor újra letöltődik).
 
 ---
 

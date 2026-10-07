@@ -18,7 +18,8 @@ export type DiagnosticCode =
   | 'ScriptIgnored'
   | 'CircularDependency'
   | 'UnresolvedLabel'
-  | 'InvalidValue';
+  | 'InvalidValue'
+  | 'CustomCssError';
 
 export interface Diagnostic {
   level: DiagnosticLevel;

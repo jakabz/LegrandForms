@@ -7,7 +7,8 @@ Kiadás előtt mind az 5 űrlapon (AJ, AT, Form, MU, Ny), mindhárom módban (Ne
 | # | Ellenőrzés | New | Edit | Display |
 |---|---|---|---|---|
 | 1 | Az űrlap betölt, nincs hibaüzenet; a diagnosztikai panelen nincs `error` szintű bejegyzés | ☐ | ☐ | ☐ |
-| 2 | Elrendezés egyezik a Nintex-űrlappal (pozíciók, színek, betűk, fejléc-kép) | ☐ | ☐ | ☐ |
+| 2 | Elrendezés egyezik a Nintex-űrlappal (pozíciók, méretek, sorrend). `fluent` módban (alapértelmezés) a színek/betűk a SharePoint-témát követik, a fejléckép nincs, és a helye nem marad üresen; `nintex` módban a színek, betűk és a fejléckép is egyeznek | ☐ | ☐ | ☐ |
+| 2a | Az egyedi CSS (ha be van állítva) érvényesül, és csak az űrlapra hat | ☐ | ☐ | ☐ |
 | 3 | Keskeny ablakban (< 640 px) egyoszlopos, olvasható elrendezés | ☐ | ☐ | ☐ |
 | 4 | Címkére kattintva a hozzá tartozó mező kap fókuszt; Tab-sorrend értelmes | ☐ | ☐ | – |
 | 5 | Kötelező mezők: üresen mentve hibaüzenet a mező alatt + összesítő üzenet felül | ☐ | ☐ | – |

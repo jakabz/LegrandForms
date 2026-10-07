@@ -91,6 +91,46 @@ describe('computeAbsoluteLayout', () => {
   });
 });
 
+describe('removed controls (hideImages)', () => {
+  const HEADER: LayoutItem[] = [item('img', 0, 0, 700, 155, 100), ...ROWS.map((r) => ({ ...r, top: r.top + 160 }))];
+
+  it('drops removed items and reclaims their band even with collapseHiddenRows off', () => {
+    const result = computeAbsoluteLayout({
+      layout: layoutOf(HEADER, 400),
+      isHidden: () => false,
+      isRemoved: (id) => id === 'img',
+      collapseHiddenRows: false
+    });
+    expect(result.boxes.map((b) => b.controlId)).not.toContain('img');
+    expect(topsOf(result.boxes)).toEqual({ l1: 0, i1: 0, l2: 50, i2: 50, l3: 120, i3: 120 });
+    expect(result.height).toBe(240);
+  });
+
+  it('shrinks a band to the remaining items when a removed item overlaps them (ATForm calculation on the image)', () => {
+    const items = [item('img', 0, 0, 700, 155), item('calc', 0, 130, 700, 25), item('next', 0, 160, 700, 30)];
+    const result = computeAbsoluteLayout({ layout: layoutOf(items, 200), isHidden: () => false, isRemoved: (id) => id === 'img', collapseHiddenRows: true });
+    expect(topsOf(result.boxes)).toEqual({ calc: 0, next: 30 });
+    expect(result.height).toBe(70);
+  });
+
+  it('a removed item is never a background rectangle', () => {
+    const items = [item('img', 0, 0, 700, 300, 95), ...ROWS];
+    const collapse = computeCollapse({ items, isHidden: () => false, isRemoved: (id) => id === 'img', collapseHiddenRows: true });
+    expect(collapse.backgroundIds).toEqual([]);
+  });
+
+  it('removes the header image of every sample: the first remaining row moves to the top', () => {
+    ['AJForm.xml', 'ATForm.xml', 'Form.xml', 'MUForm.xml', 'NyForm.xml'].forEach((file) => {
+      const def = parseSample(file);
+      const layout = def.layouts.filter((l) => l.name === 'Desktop')[0] || def.layouts[0];
+      const isImage = (id: string): boolean => !!def.controls[id] && def.controls[id].type === 'Image';
+      const result = computeAbsoluteLayout({ layout, isHidden: () => false, isRemoved: isImage, collapseHiddenRows: false });
+      expect(result.boxes.some((b) => isImage(b.controlId))).toBe(false);
+      expect(Math.min(...result.boxes.map((b) => b.top))).toBe(0);
+    });
+  });
+});
+
 describe('AJForm layout (K-09)', () => {
   const def = parseSample('AJForm.xml');
   const layout = def.layouts[0];
@@ -118,6 +158,11 @@ describe('computeResponsiveRows', () => {
   it('orders rows by top, items by left, omits hidden controls', () => {
     const rows = computeResponsiveRows(layoutOf([ROWS[1], ROWS[0], ...ROWS.slice(2)]), (id) => id === 'i3');
     expect(rows.map((r) => r.controlIds)).toEqual([['l1', 'i1'], ['l2', 'i2'], ['l3']]);
+  });
+
+  it('omits removed controls like hidden ones', () => {
+    const rows = computeResponsiveRows(layoutOf([item('img', 0, 0, 700, 40), ...ROWS.map((r) => ({ ...r, top: r.top + 40 }))]), (id) => id === 'img');
+    expect(rows[0].controlIds).toEqual(['l1', 'i1']);
   });
 
   it('puts background rectangles in their own row before the rows they cover', () => {

@@ -55,3 +55,12 @@ export function cleanCss(raw: string | undefined): string {
   const decoded = decodeHtmlEntities(raw).replace(/ /g, ' ');
   return stringifyCss(cleanNodes(parseCss(decoded)));
 }
+
+/**
+ * Cleans a custom stylesheet (`customCssUrl`, Rendszerterv §11.4) with the same safety rules as the form CSS.
+ * The file is plain CSS, so no entity decoding is done.
+ */
+export function cleanCustomCss(raw: string | undefined): string {
+  if (!raw || !raw.trim()) return '';
+  return stringifyCss(cleanNodes(parseCss(raw.replace(/^\ufeff/, ''))));
+}

@@ -50,8 +50,37 @@ describe('resolveConfig', () => {
       collapseHiddenRows: true,
       urlRewrites: {},
       emptyRuleBehavior: 'warn',
-      debug: false
+      debug: false,
+      styleMode: 'fluent',
+      customCssUrl: '',
+      hideImages: true
     });
+  });
+
+  it('style options: hideImages follows styleMode unless set explicitly', () => {
+    const base = { formDefinitionUrl: '/a.xml' };
+    expect(resolveConfig({ ...base, styleMode: 'nintex' }, '', false).config).toEqual(
+      expect.objectContaining({ styleMode: 'nintex', hideImages: false })
+    );
+    expect(resolveConfig({ ...base, styleMode: 'nintex', hideImages: true }, '', false).config).toEqual(
+      expect.objectContaining({ styleMode: 'nintex', hideImages: true })
+    );
+    expect(resolveConfig('{"formDefinitionUrl":"/a.xml","styleMode":"bogus","hideImages":"false","customCssUrl":" /c.css "}', '', false).config).toEqual(
+      expect.objectContaining({ styleMode: 'fluent', hideImages: false, customCssUrl: '/c.css' })
+    );
+  });
+
+  it('look switches in the URL work in debug builds or with debug configured; nfCss only in debug builds', () => {
+    const search = '?nfStyle=nintex&nfHideImages=1&nfCss=%2Fx.css';
+    expect(resolveConfig({ formDefinitionUrl: '/a.xml' }, search, false).config).toEqual(
+      expect.objectContaining({ styleMode: 'fluent', hideImages: true, customCssUrl: '' })
+    );
+    expect(resolveConfig({ formDefinitionUrl: '/a.xml', debug: true }, search, false).config).toEqual(
+      expect.objectContaining({ styleMode: 'nintex', hideImages: true, customCssUrl: '' })
+    );
+    expect(resolveConfig({ formDefinitionUrl: '/a.xml' }, search, true).config).toEqual(
+      expect.objectContaining({ styleMode: 'nintex', hideImages: true, customCssUrl: '/x.css' })
+    );
   });
 
   it('accepts JSON strings and validates formDefinitionUrl', () => {

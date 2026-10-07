@@ -1,5 +1,5 @@
 {
-  "_comment": "Form customizer assignments per environment. List and content type names are placeholders until K-02/K-06 are confirmed.",
+  "_comment": "Form customizer assignments per environment. List and content type names are placeholders until K-02/K-06 are confirmed. styleMode / hideImages / customCss may also be set per form entry (customCss: file name in the definition library or a server-relative URL).",
   "componentId": "3dfda748-218b-4cd1-8967-537b5d9c49ef",
   "defaults": {
     "definitionLibrary": "FormDefinitions",
@@ -7,7 +7,8 @@
     "responsiveBreakpoint": 640,
     "collapseHiddenRows": true,
     "emptyRuleBehavior": "warn",
-    "debug": false
+    "debug": false,
+    "styleMode": "fluent"
   },
   "environments": {
     "DEV": {

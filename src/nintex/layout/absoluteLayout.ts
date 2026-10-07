@@ -19,6 +19,8 @@ export interface AbsoluteLayoutInput {
   isHidden(controlId: string): boolean;
   measuredHeights?: Record<string, number>;
   collapseHiddenRows: boolean;
+  /** Controls removed by configuration (`hideImages`): not rendered, their space is reclaimed. */
+  isRemoved?(controlId: string): boolean;
 }
 
 export interface AbsoluteLayoutResult {
@@ -43,7 +45,8 @@ function toBox(item: LayoutItem, top: number, height: number, hidden: boolean, i
 
 /**
  * Absolute (pixel-faithful) layout of the Nintex canvas (Rendszerterv §10.1, §10.3, §10.4):
- * positions from the XML, hidden-band collapse (optional) and push-down of grown controls.
+ * positions from the XML, hidden-band collapse (optional), removal of configured controls and push-down of grown
+ * controls.
  */
 export function computeAbsoluteLayout(input: AbsoluteLayoutInput): AbsoluteLayoutResult {
   const { layout } = input;
@@ -51,13 +54,15 @@ export function computeAbsoluteLayout(input: AbsoluteLayoutInput): AbsoluteLayou
     items: layout.items,
     isHidden: input.isHidden,
     measuredHeights: input.measuredHeights,
-    collapseHiddenRows: input.collapseHiddenRows
+    collapseHiddenRows: input.collapseHiddenRows,
+    isRemoved: input.isRemoved
   });
+  const isRemoved = input.isRemoved || (() => false);
   const background = new Set(collapse.backgroundIds);
   const measured = input.measuredHeights || {};
 
   let contentBottom = 0;
-  const boxes = layout.items.map((item) => {
+  const boxes = layout.items.filter((item) => !isRemoved(item.controlId)).map((item) => {
     const hidden = input.isHidden(item.controlId);
     let top: number;
     let height: number;

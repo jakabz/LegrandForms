@@ -259,7 +259,7 @@ nintex-form-customizer/
 ### 5.2 `ConfigResolver`
 Forrásai prioritási sorrendben:
 1. `ClientSideComponentProperties` (tartalomtípusonként a form customizer tulajdonságai) – **elsődleges**.
-2. URL-paraméter felülírás csak fejlesztéshez (`?nfDef=…`, `?nfDebug=1`), éles környezetben (`DEBUG` build flag nélkül) letiltva.
+2. URL-paraméter felülírás csak fejlesztéshez (`?nfDef=…`, `?nfDebug=1`, `?nfCss=…`), éles környezetben (`DEBUG` build flag nélkül) letiltva. Kivétel a két ártalmatlan megjelenés-kapcsoló (`?nfStyle=nintex|fluent`, `?nfHideImages=0|1`): ezek akkor is működnek, ha a tartalomtípuson `debug: true` van, így a két megjelenés a tenanton összehasonlítható.
 
 ```ts
 interface INintexFormProperties {
@@ -270,6 +270,9 @@ interface INintexFormProperties {
   urlRewrites?: Record<string, string>; // on-prem → SPO URL előtagok
   emptyRuleBehavior?: "ignore" | "warn"; // alap: "warn" diagnosztikában
   debug?: boolean;
+  styleMode?: "fluent" | "nintex";    // alap: "fluent" (lásd 11.4)
+  customCssUrl?: string;              // szerver-relatív URL, egyedi CSS (lásd 11.4)
+  hideImages?: boolean;               // alap: fluent → true, nintex → false (lásd 10.5)
 }
 ```
 
@@ -550,6 +553,15 @@ A Nintex classic nem zárja össze a rejtett vezérlők helyét, ami a migrált 
 ### 10.4 Rétegzés
 Az XML `ZIndex` értékeit megtartjuk; az azonos helyen lévő, szabályokkal váltott vezérlők közül a rejtett nem kap `pointer-events`-et.
 
+### 10.5 Konfigurációval eltávolított vezérlők (`hideImages`)
+A mintákban minden űrlap tetején egy fejléckép (Image vezérlő, 140–250 px magas) van, amely SPO-ban többnyire nem kell (és a régi on-prem URL-en nem is érhető el). `hideImages: true` esetén:
+1. Az **Image** vezérlők és a layout háttérképe (`BackgroundImageUrl`) nem jelenik meg.
+2. Az eltávolított elemek helye **mindig** összecsukódik, a `collapseHiddenRows` beállítástól függetlenül (ez nem szabály szerinti, futás közben változó rejtés, hanem végleges elhagyás).
+3. Ha egy sávban az eltávolított elem mellett más elem is van (ATForm: a 130–155 közötti számított mező rálóg a 0–155 közötti képre), a sáv a megmaradt elemek kiterjedésére zsugorodik: a számított mező a vászon tetejére kerül.
+4. Eltávolított elem nem lehet háttér-téglalap (10.3/4).
+
+Alapértelmezés: `styleMode: "fluent"` mellett `true`, `"nintex"` mellett `false`; külön megadva bármelyik módban felülírható.
+
 ---
 
 ## 11. Stílus és megjelenés
@@ -564,6 +576,25 @@ Az XML `ZIndex` értékeit megtartjuk; az azonos helyen lévő, szabályokkal v�
 
 ### 11.3 URL-átírás
 `urlRewrites` konfiguráció előtag-cserével (pl. `http://appfrlgs243.eu.dir.grpleg.com/sites/` → `https://legrand.sharepoint.com/sites/`). Relatív URL-ek (`/sites/hungary/...`) a tenant gyökeréhez képest oldódnak fel. A képeket migráláskor át kell másolni az SPO-oldal `SiteAssets` tárába.
+
+### 11.4 Stílusmód és egyedi CSS (`styleMode`, `customCssUrl`)
+Tartalomtípusonként (`ClientSideComponentProperties`) választható, hogy az XML megjelenése mennyire érvényesül.
+
+| | `styleMode: "fluent"` (alapértelmezés) | `styleMode: "nintex"` |
+|---|---|---|
+| Pozíció, méret, z-index (10. fejezet) | XML | XML |
+| Statikus vezérlő-stílus (11.2: szín, betű, keret, igazítás) | **nem** | XML (inline) |
+| Formázási szabályok stílusa (`FormatRule` szín, betű…) | igen (jelentést hordoz, pl. piros kiemelés) | igen |
+| Űrlap CSS (11.1) | **nem** | igen (scope-olva) |
+| Layout háttérszín | **nem** (a téma látszik) | XML |
+| Képek (`hideImages` alapértéke) | rejtve | látszanak |
+| Rich text címkék inline betűtípusa/mérete | a téma betűje (`!important` felülírás) | XML |
+
+- A gyökérelem `nf-style-fluent` vagy `nf-style-nintex` osztályt kap, így az egyedi CSS módonként is célozhat.
+- **`customCssUrl`**: szerver-relatív URL egy CSS-fájlhoz (tipikusan a `FormDefinitions` tárban, az XML mellett). Bájtként töltjük le (UTF-8, BOM-mal vagy anélkül; UTF-16 is), ugyanazzal a tisztítóval megy át, mint az űrlap CSS (`@import`, `expression()`, `javascript:`, IE-hackek tiltva; HTML-entitás dekódolás nincs), majd `.nf-root-{formId}` alá scope-oljuk, és **az űrlap CSS után** illesztjük be, így azonos specifitásnál felülírja. Betöltése párhuzamos a definícióéval; ha nem olvasható, az űrlap ettől még megjelenik, a hiba `CustomCssError` diagnosztika.
+- Mindkét módban használható. `nintex` módban az XML statikus stílusa inline, ezért felülírásához `!important` kell; `fluent` módban nem.
+- Hivatkozható horgonyok: `[data-control-name="<Name>"]` (a Nintex vezérlőnév), `[data-control-id="<guid>"]`, `.nf-ctl-<típus>` (pl. `.nf-ctl-textbox`, `.nf-ctl-label`), `.nf-filler-control-inner`, `.nf-control-content`, `.nf-invalid`, `.nf-disabled`, `.nf-validation-error`, `.nf-form-canvas`, `.nf-responsive` (keskeny nézet).
+- A CSS-ben lévő relatív `url(...)` az oldalhoz, nem a CSS-fájlhoz képest oldódik fel – szerver-relatív vagy abszolút URL-t kell használni.
 
 ---
 
@@ -607,7 +638,7 @@ A lista-szintű validációs képletek és kötelező mezők hibáit (`400`) mez
 1. `.sppkg` → tenant App Catalog, `skipFeatureDeployment: true`.
 2. XML-ek feltöltése a cél site „FormDefinitions” dokumentumtárába (csak olvasási jog a felhasználóknak, írás az adminoknak).
 3. Tartalomtípus-hozzárendelés (listánként, tartalomtípusonként) PnP PowerShell-lel:
-   `NewFormClientSideComponentId`, `EditFormClientSideComponentId`, `DisplayFormClientSideComponentId` = a customizer ID-ja, és a megfelelő `…ClientSideComponentProperties` = JSON (`formDefinitionUrl`, `urlRewrites`, …). Részletes szkript: Fejlesztői leírás 8. fejezet.
+   `NewFormClientSideComponentId`, `EditFormClientSideComponentId`, `DisplayFormClientSideComponentId` = a customizer ID-ja, és a megfelelő `…ClientSideComponentProperties` = JSON (`formDefinitionUrl`, `urlRewrites`, `styleMode`, `customCssUrl`, …). Részletes szkript: Fejlesztői leírás 8. fejezet. A megjelenés (`styleMode`, `hideImages`, `customCss`) a `deploy/forms.json`-ban alapértelmezésként és űrlaponként is megadható; váltáshoz elég a szkriptet újrafuttatni, új `.sppkg` nem kell.
 4. Visszaállítás: a három `…ClientSideComponentId` mező ürítése.
 
 ---
@@ -627,7 +658,7 @@ A lista-szintű validációs képletek és kötelező mezők hibáit (`400`) mez
 - Bundle: Fluent v8 tree-shaking (`@fluentui/react/lib/...` importok), PnP controls egyedi import útvonalak.
 
 ## 16. Hibakezelés és diagnosztika
-- `Diagnostic { level: "info"|"warn"|"error"; code; message; controlId?; ruleId?; source? }` – kódok: `UnsupportedControl`, `UnsupportedFunction`, `OrphanReference`, `EmptyRule`, `ExpressionParseError`, `MissingField`, `UnknownBinding`, `ScriptIgnored`, `CircularDependency`, valamint a megvalósítás során bevezetett: `XmlParseError` (az XML nem dolgozható fel), `UnsupportedReference` (ismeretlen névtér vagy `{Common:…}` név), `ExpressionRuntimeError` (függvény futási hibája), `MissingLayout` (nincs layout / a vezérlő nincs elhelyezve), `UnresolvedLabel` (`AssociatedControl` nem található – info), `InvalidValue` (pl. érvénytelen regex, duplikált UniqueId).
+- `Diagnostic { level: "info"|"warn"|"error"; code; message; controlId?; ruleId?; source? }` – kódok: `UnsupportedControl`, `UnsupportedFunction`, `OrphanReference`, `EmptyRule`, `ExpressionParseError`, `MissingField`, `UnknownBinding`, `ScriptIgnored`, `CircularDependency`, valamint a megvalósítás során bevezetett: `XmlParseError` (az XML nem dolgozható fel), `UnsupportedReference` (ismeretlen névtér vagy `{Common:…}` név), `ExpressionRuntimeError` (függvény futási hibája), `MissingLayout` (nincs layout / a vezérlő nincs elhelyezve), `UnresolvedLabel` (`AssociatedControl` nem található – info), `InvalidValue` (pl. érvénytelen regex, duplikált UniqueId), `CustomCssError` (a `customCssUrl` nem tölthető be – warn, 11.4).
 - Szintek: `error` = az űrlap egy része biztosan nem a Nintex szerint működik (parse-hiba, nem támogatott függvény, rossz argumentumszám); `warn` = tolerált anomália (árva hivatkozás, üres szabály, figyelmen kívül hagyott kötés/script); `info` = tájékoztató.
 - Debug mód: oldalsó panel a diagnosztikákkal + szabály-nyomkövetés (melyik szabály, milyen eredménnyel futott le), vezérlő-azonosítók overlay.
 - Konzol-naplózás SPFx `Log` osztállyal.

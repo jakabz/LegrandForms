@@ -24,6 +24,11 @@ export interface CollapseInput {
   measuredHeights?: Record<string, number>;
   /** Remove bands whose controls are all hidden. */
   collapseHiddenRows: boolean;
+  /**
+   * Controls removed from the form by configuration (e.g. `hideImages`). Unlike hidden controls their space is
+   * always reclaimed, independently of `collapseHiddenRows`.
+   */
+  isRemoved?(controlId: string): boolean;
 }
 
 export interface CollapseResult {
@@ -84,7 +89,9 @@ export function buildBands(items: LayoutItem[]): Band[] {
  */
 export function computeCollapse(input: CollapseInput): CollapseResult {
   const measured = input.measuredHeights || {};
-  const background = findBackgroundItems(input.items);
+  const isRemoved = input.isRemoved || (() => false);
+  // Removed items never act as background rectangles (they take no space at all).
+  const background = findBackgroundItems(input.items.filter((item) => !isRemoved(item.controlId)));
   const banded = input.items.filter((item) => !background.has(item.controlId));
   const byId: Record<string, LayoutItem> = {};
   input.items.forEach((item) => (byId[item.controlId] = item));
@@ -93,20 +100,29 @@ export function computeCollapse(input: CollapseInput): CollapseResult {
   const adjusted: BandAdjustment[] = [];
   let offset = 0;
   bands.forEach((band, index) => {
-    const visible = band.controlIds.filter((id) => !input.isHidden(id));
-    const collapsed = input.collapseHiddenRows && visible.length === 0;
+    const kept = band.controlIds.filter((id) => !isRemoved(id));
+    const visible = kept.filter((id) => !input.isHidden(id));
+    const collapsed = kept.length === 0 || (input.collapseHiddenRows && visible.length === 0);
+    // A band that loses some of its items to removal shrinks to the extent of the remaining ones
+    // (AT: the header image 0–155 with a calculation 130–155 on top of it → the band starts at 130).
+    let leadCut = 0;
+    let bottom = band.bottom;
+    if (!collapsed && kept.length < band.controlIds.length) {
+      leadCut = Math.min(...kept.map((id) => byId[id].top)) - band.top;
+      bottom = Math.max(...kept.map((id) => byId[id].top + byId[id].height));
+    }
     let growth = 0;
     visible.forEach((id) => {
       const item = byId[id];
       const height = measured[id] !== undefined && measured[id] > item.height ? measured[id] : item.height;
-      growth = Math.max(growth, item.top + height - band.bottom);
+      growth = Math.max(growth, item.top + height - bottom);
     });
-    const bandOffset = offset;
+    const bandOffset = offset - leadCut;
     if (collapsed) {
       const next = bands[index + 1];
       offset -= (next ? next.top : band.bottom) - band.top;
     } else {
-      offset += growth;
+      offset = bandOffset - (band.bottom - bottom) + growth;
     }
     adjusted.push({ ...band, offset: bandOffset, offsetAfter: offset, collapsed, growth: collapsed ? 0 : growth });
   });

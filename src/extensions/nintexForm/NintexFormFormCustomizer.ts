@@ -11,6 +11,8 @@ import NintexForm, { INintexFormProps, NintexFormState } from '../../components/
 import type { FormMode } from '../../nintex/expression/context';
 import { INintexFormProperties, resolveConfig } from '../../services/ConfigResolver';
 import { FormDefinitionLoadError, FormDefinitionProvider, IKeyValueStorage } from '../../services/FormDefinitionProvider';
+import { createDiagnostic } from '../../nintex/model/Diagnostic';
+import { loadCustomCss } from '../../services/CustomCssLoader';
 import { ItemPersistence } from '../../services/ItemPersistence';
 import { SpDataService } from '../../services/SpDataService';
 import { rewriteUrl } from '../../services/urlRewriter';
@@ -77,8 +79,17 @@ export default class NintexFormFormCustomizer extends BaseFormCustomizer<INintex
       rewriteUrl: (url) => rewriteUrl(url, config.urlRewrites, origin)
     };
 
+    // The custom CSS is optional: a missing file must not block the form (diagnostic only).
+    const customCssUrl = config.customCssUrl;
+    const customCss: Promise<{ css: string; error?: string }> = customCssUrl
+      ? loadCustomCss(data, customCssUrl).then(
+          (css) => ({ css }),
+          (e: Error) => ({ css: '', error: e.message })
+        )
+      : Promise.resolve({ css: '' });
+
     try {
-      const store = await loadFormSession({
+      const sessionPromise = loadFormSession({
         definitionUrl: config.formDefinitionUrl,
         provider: new FormDefinitionProvider(data, sessionStorageOrUndefined(), { freeze: debugBuild }),
         data,
@@ -88,7 +99,12 @@ export default class NintexFormFormCustomizer extends BaseFormCustomizer<INintex
         locale: this.context.pageContext.cultureInfo.currentUICultureName || 'hu-HU',
         debug: config.debug
       });
-      this._state = { kind: 'ready', store, config };
+      const [store, css] = await Promise.all([sessionPromise, customCss]);
+      if (css.error !== undefined) {
+        Log.warn(LOG_SOURCE, `Custom CSS cannot be loaded: ${customCssUrl} (${css.error})`);
+        store.addDiagnostic(createDiagnostic('warn', 'CustomCssError', `The custom CSS cannot be loaded: ${customCssUrl} (${css.error})`));
+      }
+      this._state = { kind: 'ready', store, config, customCss: css.css };
       if (config.debug) {
         store.diagnostics.forEach((d) => Log.verbose(LOG_SOURCE, `${d.level} ${d.code}: ${d.message}`));
       }

@@ -16,7 +16,18 @@ export interface INintexFormProperties {
   emptyRuleBehavior?: 'ignore' | 'warn';
   /** Diagnostics panel, rule trace and control id overlay. */
   debug?: boolean;
+  /**
+   * "fluent" (default): only the layout comes from the XML; colors, fonts, borders and the form CSS are replaced
+   * by the SharePoint (Fluent) theme. "nintex": Nintex-faithful look (Rendszerterv §11.4).
+   */
+  styleMode?: StyleMode;
+  /** Server-relative URL of a CSS file applied after the form CSS (scoped to the form). */
+  customCssUrl?: string;
+  /** Leave out Image controls and the layout background image; default true in "fluent", false in "nintex". */
+  hideImages?: boolean;
 }
+
+export type StyleMode = 'fluent' | 'nintex';
 
 export interface ResolvedConfig {
   formDefinitionUrl: string;
@@ -26,6 +37,10 @@ export interface ResolvedConfig {
   urlRewrites: Record<string, string>;
   emptyRuleBehavior: 'ignore' | 'warn';
   debug: boolean;
+  styleMode: StyleMode;
+  /** Empty when not configured. */
+  customCssUrl: string;
+  hideImages: boolean;
 }
 
 export interface ConfigResolution {
@@ -73,7 +88,9 @@ function asRecord(value: unknown): Record<string, string> {
 
 /**
  * Resolves the customizer configuration. Sources (priority order): ClientSideComponentProperties, then — only when
- * `allowUrlOverrides` (debug builds) — the query string `?nfDef=<url>` and `?nfDebug=1`.
+ * `allowUrlOverrides` (debug builds) — the query string `?nfDef=<url>`, `?nfDebug=1` and `?nfCss=<url>`.
+ * The harmless look switches `?nfStyle=nintex|fluent` and `?nfHideImages=0|1` also work when `debug` is configured,
+ * so the two looks can be compared on the tenant.
  */
 export function resolveConfig(
   properties: Partial<INintexFormProperties> | string | undefined,
@@ -97,6 +114,10 @@ export function resolveConfig(
     return { error: 'formDefinitionUrl is not configured for this content type' };
   }
   const breakpoint = Number(props.responsiveBreakpoint);
+  const lookQuery = allowUrlOverrides || asBoolean(props.debug, false) ? parseQuery(search) : {};
+  const styleSource = (lookQuery.nfstyle !== undefined ? lookQuery.nfstyle : String(props.styleMode || '')).trim().toLowerCase();
+  const styleMode: StyleMode = styleSource === 'nintex' ? 'nintex' : 'fluent';
+  const hideImages = asBoolean(lookQuery.nfhideimages !== undefined ? lookQuery.nfhideimages : props.hideImages, styleMode === 'fluent');
   return {
     config: {
       formDefinitionUrl,
@@ -105,7 +126,10 @@ export function resolveConfig(
       collapseHiddenRows: asBoolean(props.collapseHiddenRows, true),
       urlRewrites: asRecord(props.urlRewrites),
       emptyRuleBehavior: props.emptyRuleBehavior === 'ignore' ? 'ignore' : 'warn',
-      debug: query.nfdebug !== undefined ? asBoolean(query.nfdebug, true) : asBoolean(props.debug, false)
+      debug: query.nfdebug !== undefined ? asBoolean(query.nfdebug, true) : asBoolean(props.debug, false),
+      styleMode,
+      customCssUrl: (query.nfcss !== undefined ? query.nfcss : typeof props.customCssUrl === 'string' ? props.customCssUrl : '').trim(),
+      hideImages
     }
   };
 }
