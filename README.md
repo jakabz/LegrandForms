@@ -24,6 +24,7 @@ Telepítés és tartalomtípus-hozzárendelés: `deploy/Set-NintexForms.ps1` (le
 ## Dokumentáció
 
 - [Rendszerterv](docs/Rendszerterv.md) – szemantika, architektúra, döntések (20. fejezet: megvalósítási megjegyzések)
+- [Telepítés és kipróbálás](docs/Telepites-es-kiprobalas.md) – lépésről lépésre a teszt-site-ig
 - [Fejlesztői leírás](docs/Fejlesztoi-leiras.md) – környezet, parancsok, tesztelés, telepítés
 - [Teszt-listák](docs/test-lists.md) – a minta űrlapok mezőleltára a teszt-site-hoz
 - [UAT ellenőrzőlista](docs/uat-checklist.md)
