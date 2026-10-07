@@ -17,6 +17,7 @@ import type { FieldSchema } from '../../services/FieldSchema';
 import type { IFormPersistence, SaveRequest } from '../../services/ItemPersistence';
 import { FormStore, FormStoreOptions } from '../../state/FormStore';
 import { formatCalculation } from '../controls/CalculationControl';
+import { repeatLayoutStyle } from '../controls/repeatLayout';
 import type { FormServices } from '../FormContext';
 import { NintexForm } from '../NintexForm';
 import { sanitizeHtml } from '../sanitize';
@@ -236,5 +237,36 @@ describe('helpers', () => {
     expect(formatCalculation(def, [ALICE], 'hu-HU')).toBe('Alice');
     expect(formatCalculation({ ...def, prefix: 'Év: ' }, '2026', 'hu-HU')).toBe('Év: 2026');
     expect(formatCalculation(def, null, 'hu-HU')).toBe('');
+  });
+  it('multi-value lookup loads its options and renders a checkbox list', async () => {
+    const definition = parseSample('TeteltorzsForm.xml');
+    const store = new FormStore({ definition, mode: 'New', fields: {}, currentUser: ALICE, currentUserGroups: [], locale: 'hu-HU', persistence: new FakePersistence() });
+    const config = resolveConfig({ formDefinitionUrl: '/x.xml' }, '', false).config!;
+    const { container } = render(<NintexForm state={{ kind: 'ready', store, config }} strings={strings} services={services} onSaved={jest.fn()} onClosed={jest.fn()} listUrl='/l' />);
+    const box = await screen.findByLabelText('Gyártás');
+    expect(container.querySelector('.nf-lookup-multi')).toBeTruthy();
+    expect(screen.queryByText(strings.LookupLoading)).toBeNull();
+    act(() => {
+      fireEvent.click(box);
+    });
+    const id = definition.controlsByName['kategória'];
+    expect(store.getValue(id)).toEqual([{ kind: 'lookup', id: 1, title: 'Gyártás' }]);
+  });
+  it('RadioButtonList choices render as radio buttons, not a dropdown', async () => {
+    const definition = parseSample('TeteltorzsForm.xml');
+    const store = new FormStore({ definition, mode: 'New', fields: {}, currentUser: ALICE, currentUserGroups: [], locale: 'hu-HU', persistence: new FakePersistence() });
+    const config = resolveConfig({ formDefinitionUrl: '/x.xml' }, '', false).config!;
+    const { container } = render(<NintexForm state={{ kind: 'ready', store, config }} strings={strings} services={services} onSaved={jest.fn()} onClosed={jest.fn()} listUrl="/l" />);
+    const notify = container.querySelector(`[data-control-id="${definition.controlsByName['kezdeményezőértesítése']}"]`) as HTMLElement;
+    expect(notify.querySelectorAll('input[type="radio"]').length).toBe(2);
+    expect(notify.querySelector('.ms-Dropdown')).toBeNull();
+    await screen.findByLabelText('Gyártás'); // let the lookup on the same form finish loading
+  });
+
+  it('repeatLayoutStyle honours RepeatColumns and RepeatDirection', () => {
+    expect(repeatLayoutStyle(3, 1, 'Vertical').gridAutoFlow).toBeUndefined();
+    expect(repeatLayoutStyle(3, 2, 'Vertical')).toMatchObject({ gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gridTemplateRows: 'repeat(2, auto)', gridAutoFlow: 'column' });
+    expect(repeatLayoutStyle(3, 2, 'Horizontal').gridAutoFlow).toBeUndefined();
+    expect(repeatLayoutStyle(1, 4, 'Vertical').gridTemplateColumns).toBe('minmax(0, 1fr)');
   });
 });

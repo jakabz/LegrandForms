@@ -157,7 +157,18 @@ export interface MultiLineTextBoxControl extends FieldControlBase {
   isAppendText: boolean;
 }
 
-export type ChoiceDisplayFormat = 'DropDownList' | 'OptionButtons' | 'RadioButtons' | 'CheckBoxes' | 'ListBox' | string;
+/** Nintex classic exports `RadioButtonList` / `CheckBoxList`; older names are accepted too. */
+export type ChoiceDisplayFormat = 'DropDownList' | 'RadioButtonList' | 'OptionButtons' | 'RadioButtons' | 'CheckBoxList' | 'CheckBoxes' | 'ListBox' | string;
+
+/** Radio button display (Choice `DisplayFormat`, Lookup `DisplayFormat` / `SingleDisplayMode`). */
+export function isRadioDisplayFormat(format: string | undefined): boolean {
+  return !!format && /^(RadioButtonList|RadioButtons|OptionButtons)$/i.test(format);
+}
+
+/** Check box display (Choice `DisplayFormat`, Lookup `MultipleDisplayMode`). */
+export function isCheckBoxDisplayFormat(format: string | undefined): boolean {
+  return !!format && /^(CheckBoxList|CheckBoxes)$/i.test(format);
+}
 
 export interface ChoiceControl extends FieldControlBase {
   type: 'Choice';
@@ -207,6 +218,9 @@ export interface LookupControl extends FieldControlBase {
   displayFormat: string;
   singleDisplayMode?: string;
   multipleDisplayMode?: string;
+  /** Option list columns for radio / check box display. */
+  repeatColumns: number;
+  repeatDirection: 'Vertical' | 'Horizontal' | string;
   cascade?: LookupCascade;
   executeInNewMode: boolean;
   executeInEditMode: boolean;

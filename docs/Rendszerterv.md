@@ -396,10 +396,10 @@ Típusspecifikus mezők (kivonat):
 | Label | `text` (HTML lehet), `associatedControlName` |
 | TextBox | `dataType` (String/Double/Integer/Currency), `maxLength`, `isPassword`, `regex`, `range`, `compare`, `showAsPercent` |
 | MultiLineTextBox | `isRichText`, `richTextMode` (FullHtml/Compatible), `isAppendText` |
-| Choice | `choices[]` (kifejezés-tokeneket tartalmazhat), `displayFormat` (DropDownList/ListBox/RadioButtons/CheckBoxes), `fillInChoice`, `multi` (CheckBoxes/ListBox+multi mező), `repeatColumns`, `repeatDirection` |
+| Choice | `choices[]` (kifejezés-tokeneket tartalmazhat), `displayFormat` (DropDownList/ListBox/RadioButtonList/CheckBoxList; a régebbi RadioButtons/OptionButtons/CheckBoxes nevek is elfogadottak), `fillInChoice`, `multi` (jelölőnégyzet-formátum vagy MultiChoice mező), `repeatColumns`, `repeatDirection` |
 | DateTime | `dateOnly`, `defaultValueType` (Blank/Today/Expression), `min/max` |
 | PeoplePicker | `multiSelect`, `maximumEntities`, `sharePointGroup`, `accountTypes[]` |
-| Lookup | `lookupList`, `lookupField`, `lookupWeb`, `allowMultipleValues`, `displayFormat`, `cascade*` |
+| Lookup | `lookupList`, `lookupField`, `lookupWeb`, `allowMultipleValues`, `displayFormat`, `singleDisplayMode`, `multipleDisplayMode`, `repeatColumns`, `repeatDirection`, `cascade*` |
 | Attachment | `min/maxAttachments`, `maxFileSize`, `whitelist`, `blockedExtensions` |
 | Calculation | `formula` (AST), `recalculateOn{New,Edit,View}`, `dataType`, `decimals`, `prefix/suffix`, `showAsPercent`, `showThousandSeparator`, opcionális `dataField` |
 | Image | `imageUrl`, `alternateText`, `horizontalWidth`, `verticalHeight` |
@@ -414,10 +414,10 @@ Típusspecifikus mezők (kivonat):
 | Label (`…5e00`) | `LabelControl` (szanitizált HTML) | – | `<label htmlFor>` az `AssociatedControl` alapján |
 | TextBox (`…5e05`) | Fluent `TextField` | Text, Number, Currency | `DataType=Double` → számvalidáció, magyar tizedesvessző elfogadása |
 | MultiLineTextBox (`…5e06`) | Fluent `TextField multiline` / PnP `RichText` | Note | `IsRichText=true` + `FullHtml` → RichText; Display módban szanitizált HTML |
-| Choice (`…5e02`) | `Dropdown` / `ChoiceGroup` / `Checkbox` lista / `ComboBox` (fill-in) | Choice, MultiChoice, Text | `{ItemProperty:…}` választék futásidőben feloldva |
+| Choice (`…5e02`) | `Dropdown` / `ChoiceGroup` (RadioButtonList) / `Checkbox` lista (CheckBoxList) / `ComboBox` (fill-in); rádió és jelölőnégyzet `RepeatColumns`/`RepeatDirection` szerinti rácsban | Choice, MultiChoice, Text | `{ItemProperty:…}` választék futásidőben feloldva |
 | DateTime (`…5e03`) | PnP `DateTimePicker` / Fluent `DatePicker` | DateTime | `DateOnly`, regionális beállítások (hu-HU) |
 | PeoplePicker (`…5e12`) | PnP `PeoplePicker` | User, UserMulti | `groupName` = `SharePointGroup`, `principalTypes` |
-| SharePointLookup (`…5e15`) | `Dropdown`/`ComboBox` (multi) saját adatforrással vagy PnP `ListItemPicker` | Lookup, LookupMulti | listacím alapján feloldás |
+| SharePointLookup (`…5e15`) | egyértékű: `Dropdown`, rádiógombos formátumnál (`DisplayFormat`/`SingleDisplayMode` = RadioButtonList) `ChoiceGroup`; többértékű: görgethető `Checkbox` lista; saját adatforrással | Lookup, LookupMulti | listacím alapján feloldás |
 | Attachment (`5f8b447a-…`) | saját `AttachmentsControl` (Fluent) | Attachments | új elemnél feltöltés mentés után |
 | Calculation (`…5e17`) | `CalculationControl` (csak olvasható szöveg) | – / kötött mező | |
 | Image (`…5e08`) | `<img>` URL-átírással | – | |

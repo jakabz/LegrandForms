@@ -8,6 +8,7 @@ import {
 } from '../nintex/expression/values';
 import type { ExprArrayItem, ExprValue, LookupValue, PersonValue } from '../nintex/expression/values';
 import type { ChoiceControl, ControlDefinition } from '../nintex/model/controls';
+import { isCheckBoxDisplayFormat } from '../nintex/model/controls';
 import type { FieldSchema } from '../services/FieldSchema';
 
 /** Controls that hold a value (everything except Label, Image, Button, Panel, Unsupported). */
@@ -23,9 +24,9 @@ export function isValueControl(control: ControlDefinition): boolean {
   );
 }
 
-/** Multi-select choice: CheckBoxes display, or a MultiChoice field. */
+/** Multi-select choice: check box display, or a MultiChoice field. */
 export function isMultiChoice(control: ChoiceControl, field: FieldSchema | undefined): boolean {
-  return control.displayFormat === 'CheckBoxes' || (!!field && field.type === 'MultiChoice');
+  return isCheckBoxDisplayFormat(control.displayFormat) || (!!field && field.type === 'MultiChoice');
 }
 
 function arrayItems(value: ExprValue | undefined): ReadonlyArray<ExprArrayItem> {

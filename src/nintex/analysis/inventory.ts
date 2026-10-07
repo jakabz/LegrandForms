@@ -1,7 +1,7 @@
 import { Ast, walkAst } from '../expression/ast';
 import { collectItemProperties } from '../expression/references';
 import type { ControlDefinition, ValueSource } from '../model/controls';
-import { getListFieldName } from '../model/controls';
+import { getListFieldName, isCheckBoxDisplayFormat } from '../model/controls';
 import type { FormDefinition } from '../model/FormDefinition';
 
 export interface BoundField {
@@ -23,7 +23,7 @@ function suggestType(control: ControlDefinition): { type: string; multi: boolean
     case 'MultiLineTextBox':
       return { type: 'Note', multi: false };
     case 'Choice': {
-      const multi = control.displayFormat === 'CheckBoxes';
+      const multi = isCheckBoxDisplayFormat(control.displayFormat);
       return { type: multi ? 'MultiChoice' : 'Choice', multi };
     }
     case 'DateTime':

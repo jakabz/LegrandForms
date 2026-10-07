@@ -8,10 +8,11 @@ import { evaluateValueSource } from '../../nintex/expression/valueSource';
 import { toText } from '../../nintex/expression/values';
 import type { ExprValue } from '../../nintex/expression/values';
 import type { ChoiceControl as ChoiceDefinition } from '../../nintex/model/controls';
-import { getListFieldName } from '../../nintex/model/controls';
+import { getListFieldName, isCheckBoxDisplayFormat, isRadioDisplayFormat } from '../../nintex/model/controls';
 import { isMultiChoice } from '../../state/controlValues';
 import { useFormContext } from '../FormContext';
 import { DisplayValue } from './DisplayValue';
+import { repeatLayoutStyle } from './repeatLayout';
 import type { IControlProps } from './types';
 
 function textsOf(value: ExprValue): string[] {
@@ -57,10 +58,11 @@ export const ChoiceControl: React.FC<IControlProps<ChoiceDefinition>> = (props) 
   }
   const common = { 'aria-labelledby': labelledBy, 'aria-describedby': describedBy, 'aria-invalid': !!error };
   const format = def.displayFormat;
+  const grid = repeatLayoutStyle(all.length, def.repeatColumns, def.repeatDirection);
 
-  if (multi && format === 'CheckBoxes') {
+  if (multi && isCheckBoxDisplayFormat(format)) {
     return (
-      <div id={inputId} role="group" className="nf-choice-checkboxes" {...common}>
+      <div id={inputId} role="group" className="nf-choice-checkboxes" style={grid} {...common}>
         {all.map((choice) => (
           <Checkbox
             key={choice}
@@ -68,7 +70,6 @@ export const ChoiceControl: React.FC<IControlProps<ChoiceDefinition>> = (props) 
             checked={selected.indexOf(choice) >= 0}
             disabled={disabled}
             onChange={(e, checked) => onChange(checked ? selected.concat([choice]) : selected.filter((s) => s !== choice))}
-            styles={{ root: { marginBottom: 4 } }}
           />
         ))}
       </div>
@@ -97,7 +98,7 @@ export const ChoiceControl: React.FC<IControlProps<ChoiceDefinition>> = (props) 
   }
 
   const current = selected.length ? selected[0] : '';
-  if (format === 'OptionButtons' || format === 'RadioButtons') {
+  if (isRadioDisplayFormat(format)) {
     const options: IChoiceGroupOption[] = all.map((c) => ({ key: c, text: c }));
     const isOwnValue = !!current && choices.indexOf(current) < 0;
     return (
@@ -108,6 +109,7 @@ export const ChoiceControl: React.FC<IControlProps<ChoiceDefinition>> = (props) 
           disabled={disabled}
           required={required}
           onChange={(e, option) => option && onChange(String(option.key))}
+          styles={{ flexContainer: grid }}
         />
         {def.fillInChoice && (
           <TextField

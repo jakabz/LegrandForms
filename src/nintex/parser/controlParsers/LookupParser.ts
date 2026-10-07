@@ -1,7 +1,7 @@
 import type { LookupControl } from '../../model/controls';
 import { EMPTY_GUID, normalizeGuid } from '../normalize';
 import type { ParseContext } from '../ParseContext';
-import { bool, nonEmptyText, text, XmlNode } from '../xml';
+import { bool, int, nonEmptyText, text, XmlNode } from '../xml';
 import { plainText, readFieldBase } from './common';
 
 export function parseLookup(node: XmlNode, ctx: ParseContext): LookupControl {
@@ -11,6 +11,8 @@ export function parseLookup(node: XmlNode, ctx: ParseContext): LookupControl {
     lookupField: plainText(node, 'LookupField') || 'Title',
     allowMultipleValues: bool(node, 'AllowMultipleValues', false),
     displayFormat: nonEmptyText(node, 'DisplayFormat') || 'DropDownList',
+    repeatColumns: int(node, 'RepeatColumns', 1),
+    repeatDirection: nonEmptyText(node, 'RepeatDirection') || 'Vertical',
     executeInNewMode: bool(node, 'ExecuteInNewMode', true),
     executeInEditMode: bool(node, 'ExecuteInEditMode', true),
     executeInViewMode: bool(node, 'ExecuteInViewMode', false)
